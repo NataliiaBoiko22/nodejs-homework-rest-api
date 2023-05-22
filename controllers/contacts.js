@@ -62,11 +62,7 @@ const updateFavorite = async (req, res, next) => {
 
   const { error } = contactUpdateValidate();
   if (error) {
-    const errorMessage = error.details[0].message.replace(/['"]/g, "");
-    const fieldName = errorMessage.split(" ")[0];
-    return res
-      .status(400)
-      .json({ message: `missing required ${fieldName} field` });
+    return res.status(400).json({ message: `missing field favorite` });
   }
   const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
   if (!result) {
