@@ -41,7 +41,7 @@ const updateCont = async (req, res, next) => {
   if (!name && !email && !phone) {
     return res.status(400).json({ message: "missing fields" });
   } else {
-    const { error } = contactUpdateValidate(req.body);
+    const { error } = contactValidate(req.body);
     if (error) {
       const errorMessage = error.details[0].message.replace(/['"]/g, "");
       const fieldName = errorMessage.split(" ")[0];
@@ -59,9 +59,12 @@ const updateCont = async (req, res, next) => {
 
 const updateFavorite = async (req, res, next) => {
   const { id } = req.params;
-
+  const { favorite } = req.body;
   const { error } = contactUpdateValidate();
   if (error) {
+    return res.status(400).json({ message: error.message });
+  }
+  if (!favorite) {
     return res.status(400).json({ message: `missing field favorite` });
   }
   const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
