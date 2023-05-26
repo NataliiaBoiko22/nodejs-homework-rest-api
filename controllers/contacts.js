@@ -4,11 +4,33 @@ const { HttpError, ctrlWrapper } = require("../helpers");
 const { contactValidate, contactUpdateValidate } = require("../models/contact");
 
 const getAll = async (req, res, next) => {
-  const allContacts = await Contact.find();
+  const { _id: owner, favorite } = req.user;
+  const { page = 1, limit = 20 } = req.query;
+  const skip = (page - 1) * limit;
+
+  const filter = { owner };
+  if (favorite) {
+    filter.favorite = favorite === "true";
+  }
+
+  const allContacts = await Contact.find(filter)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate("owner", "name email");
 
   return res.status(200).json(allContacts);
 };
 
+// const getAll = async (req, res) => {
+//   const { _id: owner } = req.user;
+//   const { page = 1, limit = 20 } = req.query;
+//   const skip = (page - 1) * limit;
+//   const result = await Contact.find({ owner })
+//     .skip(skip)
+//     .limit(limit)
+//     .populate("owner", "name email");
+//   res.json(result);
+// };
 const getById = async (req, res) => {
   const { id } = req.params;
   const contact = await Contact.findById(id);
@@ -21,6 +43,7 @@ const getById = async (req, res) => {
 };
 
 const addCont = async (req, res, next) => {
+  const { _id: owner } = req.user;
   const { error } = contactValidate(req.body);
   if (error) {
     const errorMessage = error.details[0].message.replace(/['"]/g, "");
@@ -29,7 +52,7 @@ const addCont = async (req, res, next) => {
       .status(400)
       .json({ message: `missing required ${fieldName} field` });
   } else {
-    const result = await Contact.create(req.body);
+    const result = await Contact.create({ ...req.body, owner });
     res.status(201).send(result);
   }
 };
